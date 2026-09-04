@@ -1,0 +1,14 @@
+-- Mantenimiento periódico de sesiones y tokens de recuperación.
+-- Recomendado: habilita pg_cron en el proyecto de Supabase y programa este RPC
+-- cada 15 minutos. La función es SECURITY DEFINER y no está expuesta al frontend.
+--
+-- 1) Habilitar la extensión pg_cron desde Supabase si aún no está habilitada.
+-- 2) Ejecutar:
+-- select cron.schedule(
+--   'zona-juegos-cleanup-sessions',
+--   '*/15 * * * *',
+--   $$select public.cleanup_sessions();$$
+-- );
+--
+-- La función también se ejecuta de forma oportunista durante registro/login.
+select public.cleanup_sessions();
