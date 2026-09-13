@@ -20,5 +20,5 @@ export async function requirePermission(action, resource = null) {
 }
 
 export async function requireAdmin() {
-  return requirePermission(ACTIONS.MANAGE_USERS);
+  return requirePermission(ACTIONS.USERS_MANAGE);
 }

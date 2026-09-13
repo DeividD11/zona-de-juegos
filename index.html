@@ -1,1 +1,37 @@
-<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="Zona de Juegos"><link rel="stylesheet" href="assets/css/global.css"><title>Zona de Juegos</title></head><body><main class="auth-page"><section class="hero-card" style="width:min(760px,100%);text-align:center"><span class="eyebrow">Zona de Juegos</span><h1>Juega. Compite. Mejora.</h1><p>Una plataforma de juegos web sencilla, rápida y preparada para crecer.</p><div class="dashboard-actions" style="justify-content:center"><a class="button button--primary" href="login.html">Iniciar sesión</a><a class="button button--ghost" href="register.html">Crear cuenta</a></div></section></main><script type="module">import { validate } from './js/models/auth.model.js'; const u=await validate(); if(u) location.href='dashboard.html';</script></body></html>
+<!doctype html>
+<html lang="es">
+ <head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width,initial-scale=1" name="viewport"/>
+  <meta content="Zona de Juegos" name="description"/>
+  <link href="assets/css/global.css" rel="stylesheet"/>
+  <title>
+   Zona de Juegos
+  </title>
+ </head>
+ <body>
+  <main class="auth-page">
+   <section class="hero-card hero-card--landing">
+    <span class="eyebrow">
+     Zona de Juegos
+    </span>
+    <h1>
+     Juega. Compite. Mejora.
+    </h1>
+    <p>
+     Una plataforma de juegos web sencilla, rápida y preparada para crecer.
+    </p>
+    <div class="dashboard-actions dashboard-actions--center">
+     <a class="button button--primary" href="login.html">
+      Iniciar sesión
+     </a>
+     <a class="button button--ghost" href="register.html">
+      Crear cuenta
+     </a>
+    </div>
+   </section>
+  </main>
+  <script src="js/pages/index.page.js" type="module">
+  </script>
+ </body>
+</html>

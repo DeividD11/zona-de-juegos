@@ -1,0 +1,7 @@
+-- Invariantes para ejecutar en staging.
+-- 1) Un game_session completado no puede volver a completarse.
+-- 2) score debe respetar score_ceiling.
+-- 3) metadata solo admite las cinco claves definidas.
+-- 4) una sesión activa expirada se rechaza.
+-- 5) los límites de start/finish se aplican por cuenta + operación.
+-- Ejecutar en staging con un token de prueba y datos de prueba.

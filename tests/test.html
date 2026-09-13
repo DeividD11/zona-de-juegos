@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pruebas — Zona de Juegos</title>
+  <link rel="stylesheet" href="../assets/css/global.css">
+</head>
+<body>
+  <main class="container main">
+    <header class="section-header">
+      <div>
+        <p class="eyebrow">Calidad</p>
+        <h1>Suite de pruebas</h1>
+        <p class="muted">Pruebas locales sin frameworks para lógica crítica del frontend.</p>
+      </div>
+      <button id="runTests" class="button button--primary" type="button">Ejecutar pruebas</button>
+    </header>
+    <section class="card" aria-labelledby="resultsTitle">
+      <h2 id="resultsTitle">Resultados</h2>
+      <p id="summary" role="status" aria-live="polite">Listo para ejecutar.</p>
+      <div class="table-wrap">
+        <table class="table">
+          <thead><tr><th>Suite</th><th>Resultado</th><th>Detalle</th></tr></thead>
+          <tbody id="results"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+  <script type="module" src="./test.runner.js"></script>
+</body>
+</html>

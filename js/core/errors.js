@@ -78,3 +78,39 @@ export function handleError(error, {
   console.error(error);
   return appError;
 }
+
+/** Ejecuta una operación con estados comunes sin duplicar la traducción de errores. */
+export async function runTask(task, {
+  target = null,
+  loadingMessage = 'Cargando…',
+  successMessage = '',
+  successType = 'success',
+  fallback = 'Ocurrió un problema. Inténtalo de nuevo.',
+  retry = null,
+  before = null,
+  after = null
+} = {}) {
+  try {
+    before?.();
+    if (target) {
+      target.textContent = loadingMessage;
+      target.className = 'message message--info';
+      target.hidden = false;
+      target.setAttribute('role', 'status');
+      target.setAttribute('aria-live', 'polite');
+    }
+    const result = await task();
+    if (target && successMessage) {
+      target.textContent = successMessage;
+      target.className = `message message--${successType}`;
+      target.hidden = false;
+      target.setAttribute('role', 'status');
+      target.setAttribute('aria-live', 'polite');
+    }
+    return result;
+  } catch (error) {
+    return handleError(error, { target, fallback, retry });
+  } finally {
+    after?.();
+  }
+}

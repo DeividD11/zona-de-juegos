@@ -1,6 +1,7 @@
-import { requestPasswordReset, resetPasswordWithToken } from '../models/auth.model.js';
-import { $, setBusy, setMessage, getQueryParam } from '../core/utils.js';
+import { requestPasswordReset, resetPasswordWithToken } from '../core/session.js';
+import { $, setBusy, setMessage, getQueryParam, setFieldError } from '../core/utils.js';
 import { handleError } from '../core/errors.js';
+import { validateEmail, validatePassword, assertPasswordsMatch } from '../core/validators.js';
 
 export function initForgotPassword() {
   $('#forgotPasswordForm')?.addEventListener('submit', async event => {
@@ -8,15 +9,16 @@ export function initForgotPassword() {
     const form = event.currentTarget;
     const button = $('#forgotPasswordButton');
     const message = $('#formMessage');
-    const email = String(new FormData(form).get('email')).trim();
     setMessage(message, '');
+    setFieldError($('#email'), $('#emailError'));
     setBusy(button, true, 'Preparando…');
     try {
-      await requestPasswordReset(email);
+      await requestPasswordReset(validateEmail(new FormData(form).get('email')));
       form.reset();
-      setMessage(message, 'La solicitud fue registrada. Si la cuenta existe, debe enviarse un enlace temporal de recuperación al usuario mediante el canal de entrega configurado.', 'success');
+      setMessage(message, 'La solicitud fue registrada. Si la cuenta existe, recibirás un enlace temporal de recuperación por correo. Revisa también tu carpeta de spam.', 'success');
     } catch (error) {
-      handleError(error, { target: message, fallback: 'No pudimos procesar la solicitud de recuperación.' });
+      const appError = handleError(error, { target: message, fallback: 'No pudimos procesar la solicitud de recuperación.' });
+      if (appError.field === 'email') setFieldError($('#email'), $('#emailError'), appError.message);
     } finally {
       setBusy(button, false);
     }
@@ -45,16 +47,15 @@ export function initResetPassword() {
     setMessage(message, '');
     setBusy(submit, true, 'Restableciendo…');
     try {
-      if (next.length < 8) throw new Error('La nueva contraseña debe tener al menos 8 caracteres.');
-      if (next.length > 128) throw new Error('La nueva contraseña no puede superar 128 caracteres.');
-      if (next !== confirm) throw new Error('Las contraseñas no coinciden.');
+      validatePassword(next, { label: 'La nueva contraseña' });
+      assertPasswordsMatch(next, confirm);
       await resetPasswordWithToken(token, next);
       form.reset();
       tokenField.value = '';
       setMessage(message, 'Contraseña restablecida correctamente. Todas las sesiones anteriores fueron revocadas. Ya puedes iniciar sesión.', 'success');
       submit.disabled = true;
     } catch (error) {
-      handleError(error, { target: message, fallback: 'No pudimos restablecer la contraseña.' });
+      handleError(error, { target: message, fallback: 'No pudimos restablecer tu contraseña.' });
     } finally {
       if (!submit.disabled) setBusy(submit, false);
     }

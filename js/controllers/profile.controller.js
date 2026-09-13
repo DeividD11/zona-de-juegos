@@ -1,14 +1,9 @@
 import { requireAuth } from '../core/guards.js';
-import { logout, revokeOtherSessions, changePassword } from '../models/auth.model.js';
-import { getMyScores } from '../models/score.model.js';
-import { $, escapeHtml, formatDate, setBusy, setMessage } from '../core/utils.js';
+import { logout, revokeOtherSessions, changePassword, getToken } from '../core/session.js';
+import { api } from '../core/api.js';
+import { $, escapeHtml, formatDate, setBusy, setMessage, setFieldError } from '../core/utils.js';
 import { handleError } from '../core/errors.js';
-
-function validateNewPassword(password, confirm) {
-  if (password.length < 8) throw new Error('La nueva contraseña debe tener al menos 8 caracteres.');
-  if (password.length > 128) throw new Error('La nueva contraseña no puede superar 128 caracteres.');
-  if (password !== confirm) throw new Error('Las nuevas contraseñas no coinciden.');
-}
+import { validatePassword, assertPasswordsMatch } from '../core/validators.js';
 
 export async function initProfile() {
   const user = await requireAuth(); if (!user) return;
@@ -29,11 +24,10 @@ export async function initProfile() {
     try {
       const result = await revokeOtherSessions();
       const count = Number(result?.revoked_sessions) || 0;
-      setMessage(message, count
-        ? `Se cerraron ${count} sesión${count === 1 ? '' : 'es'} en otros dispositivos.`
-        : 'No había otras sesiones activas.', 'success');
+      setMessage(message, count ? `Se cerraron ${count} sesión${count === 1 ? '' : 'es'} en otros dispositivos.` : 'No había otras sesiones activas.', 'success');
     } catch (error) {
-      handleError(error, { target: message, fallback: 'No se pudieron cerrar las otras sesiones.' });
+      const appError = handleError(error, { target: message, fallback: 'No se pudieron cerrar las otras sesiones.' });
+      if (appError.code === 'SESSION_EXPIRED') location.href = '../login.html';
     } finally {
       setBusy(button, false);
     }
@@ -46,17 +40,20 @@ export async function initProfile() {
     const message = $('#passwordMessage');
     const data = new FormData(form);
     setMessage(message, '');
+    ['current_password','new_password','confirm_password'].forEach(id => setFieldError($('#'+id), $('#'+id+'Error')));
     setBusy(button, true, 'Actualizando…');
     try {
       const current = String(data.get('current_password'));
-      const next = String(data.get('new_password'));
-      const confirm = String(data.get('confirm_password'));
-      validateNewPassword(next, confirm);
+      const next = validatePassword(data.get('new_password'), { label: 'La nueva contraseña' });
+      assertPasswordsMatch(next, data.get('confirm_password'));
       await changePassword(current, next);
       form.reset();
       setMessage(message, 'Contraseña actualizada. Las demás sesiones fueron revocadas.', 'success');
     } catch (error) {
       const appError = handleError(error, { target: message, fallback: 'No pudimos cambiar la contraseña.' });
+      const fieldMap = { password: 'new_password', confirm_password: 'confirm_password', current_password: 'current_password' };
+      const id = fieldMap[appError.field];
+      if (id) setFieldError($('#'+id), $('#'+id+'Error'), appError.message);
       if (appError.code === 'SESSION_EXPIRED') location.href = '../login.html';
     } finally {
       setBusy(button, false);
@@ -65,10 +62,10 @@ export async function initProfile() {
 
   const scoreMessage = $('#profileScoresMessage');
   const loadScores = async () => {
-    scoreMessage.hidden = true;
+    setMessage(scoreMessage, '');
     $('#profileScores').innerHTML = '<li class="loading-state">Cargando puntuaciones…</li>';
     try {
-      const scores = await getMyScores();
+      const scores = await api.scores.listMine(getToken());
       $('#profileScores').innerHTML = scores.length
         ? scores.map(s => `<li><span>${escapeHtml(s.game_name)}</span><strong>${s.best_score}</strong></li>`).join('')
         : '<li><span>No tienes puntuaciones todavía.</span><strong>—</strong></li>';

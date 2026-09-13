@@ -1,6 +1,6 @@
 /**
- * Authorization policy for the frontend.
- * This is only a UX/navigation layer. PostgreSQL RPCs remain the final authority.
+ * UX authorization matrix. PostgreSQL remains the source of truth for every
+ * protected operation; this module only controls navigation and affordances.
  */
 export const ROLES = Object.freeze({
   PUBLIC: 'public',
@@ -9,28 +9,36 @@ export const ROLES = Object.freeze({
 });
 
 export const ACTIONS = Object.freeze({
-  VIEW_GAMES: 'view_games',
-  PLAY_GAME: 'play_game',
-  SAVE_OWN_SCORE: 'save_own_score',
-  VIEW_OWN_SCORES: 'view_own_scores',
-  MANAGE_USERS: 'manage_users',
-  MANAGE_GAMES: 'manage_games',
-  MANAGE_ROLES: 'manage_roles'
+  GAMES_READ: 'games.read',
+  GAME_PLAY: 'game.play',
+  SCORES_CREATE_OWN: 'scores.createOwn',
+  SCORES_READ_OWN: 'scores.readOwn',
+  USERS_MANAGE: 'users.manage',
+  ROLES_MANAGE: 'roles.manage',
+  GAMES_MANAGE: 'games.manage',
+  SCORES_READ_ALL: 'scores.readAll',
+  AUDIT_READ: 'audit.read'
 });
 
-export function can(user, action, resource = null) {
+const USER_PERMISSIONS = new Set([
+  ACTIONS.GAMES_READ,
+  ACTIONS.GAME_PLAY,
+  ACTIONS.SCORES_CREATE_OWN,
+  ACTIONS.SCORES_READ_OWN
+]);
+
+const ADMIN_PERMISSIONS = new Set([
+  ...USER_PERMISSIONS,
+  ACTIONS.USERS_MANAGE,
+  ACTIONS.ROLES_MANAGE,
+  ACTIONS.GAMES_MANAGE,
+  ACTIONS.SCORES_READ_ALL,
+  ACTIONS.AUDIT_READ
+]);
+
+export function can(user, action, _resource = null) {
   const role = user?.role || ROLES.PUBLIC;
-
-  if (role === ROLES.ADMIN) return true;
-
-  if (role === ROLES.USER) {
-    return [
-      ACTIONS.VIEW_GAMES,
-      ACTIONS.PLAY_GAME,
-      ACTIONS.SAVE_OWN_SCORE,
-      ACTIONS.VIEW_OWN_SCORES
-    ].includes(action);
-  }
-
+  if (role === ROLES.ADMIN) return ADMIN_PERMISSIONS.has(action);
+  if (role === ROLES.USER) return USER_PERMISSIONS.has(action);
   return false;
 }

@@ -2,10 +2,6 @@ export function $(selector, root = document) {
   return root.querySelector(selector);
 }
 
-export function $all(selector, root = document) {
-  return [...root.querySelectorAll(selector)];
-}
-
 export function escapeHtml(value = '') {
   return String(value)
     .replaceAll('&', '&amp;')
@@ -43,4 +39,14 @@ export function formatDate(value) {
 
 export function getQueryParam(name) {
   return new URLSearchParams(location.search).get(name);
+}
+
+
+export function setFieldError(input, errorElement, message = '') {
+  if (!input) return;
+  if (errorElement) {
+    errorElement.textContent = message || '';
+    errorElement.hidden = !message;
+  }
+  input.setAttribute('aria-invalid', message ? 'true' : 'false');
 }
